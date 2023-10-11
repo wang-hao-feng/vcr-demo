@@ -3,6 +3,7 @@ import json
 from dataset import VCRDataset
 import random
 
+dataset_path = None
 vcr_dataset = None
 image, question, answer_choices, answer_label, rationale_choices, rationale_label = [None] * 6
 button_state = [0 for _ in range(63)]
@@ -20,6 +21,7 @@ css = "\n".join(button_css)
 
 with gr.Blocks(css=css) as demo:
     # blocks structures
+    dataset_path_text = gr.Textbox(label='vcr dataset path', info='press enter to input', interactive=True)
     split_chooser = gr.Dropdown(choices=['train', 'val'], multiselect=False, filterable=True, label='VCR dataset split')
     with gr.Row():
         with gr.Column():
@@ -45,12 +47,21 @@ with gr.Blocks(css=css) as demo:
                                                    color_map={'True':'green'})
 
     # functions
+    ## input dataset path
+    def input_dataset_path(path):
+        global dataset_path
+        dataset_path = path
+    dataset_path_text.submit(fn=input_dataset_path, inputs=dataset_path_text)
+
     ## change vcr split
     def change_dataset_split(split):
+        global dataset_path
         global vcr_dataset
+        if dataset_path is None:
+            raise gr.Error('Please input vcr dataset path first.')
         if vcr_dataset is not None:
             del vcr_dataset
-        #vcr_dataset = VCRDataset('G:/vcr', split=split)
+        #vcr_dataset = VCRDataset(dataset_path, split=split)
         vcr_dataset = [None] * (50 if split == 'train' else 25)
         return gr.Slider(maximum=len(vcr_dataset), interactive=True, value=0)
     split_chooser.select(fn=change_dataset_split, inputs=split_chooser, outputs=index_slider)
@@ -59,7 +70,7 @@ with gr.Blocks(css=css) as demo:
     def random_sample_data():
         global vcr_dataset
         if vcr_dataset is None:
-            raise gr.Error('please choose vcr split')
+            raise gr.Error('Please choose vcr split.')
         index = random.randint(0, len(vcr_dataset) - 1)
         return gr.Slider(value=index, interactive=True)
     random_idx.click(fn=random_sample_data, outputs=index_slider)
