@@ -22,7 +22,7 @@ with gr.Blocks(css=css) as demo:
     split_chooser = gr.Dropdown(choices=['train', 'val'], multiselect=False, filterable=True, label='VCR dataset split')
     with gr.Row():
         with gr.Column():
-            index_slider = gr.Slider(step=1, label='index')
+            index_slider = gr.Slider(step=1, label='index', interactive=True)
             random_idx = gr.Button('Random')
             image_board = gr.Image()
             buttons = {}
@@ -50,7 +50,16 @@ with gr.Blocks(css=css) as demo:
             del vcr_dataset
         #vcr_dataset = VCRDataset('G:/vcr', split=split)
         vcr_dataset = [None] * (50 if split == 'train' else 25)
-        return gr.Slider(maximum=len(vcr_dataset), interactive=True)
+        return gr.Slider(maximum=len(vcr_dataset), interactive=True, value=0)
     split_chooser.select(fn=change_dataset_split, inputs=split_chooser, outputs=index_slider)
+
+    ## random sample data
+    def random_sample_data():
+        global vcr_dataset
+        if vcr_dataset is None:
+            raise gr.Error('please choose vcr split')
+        index = random.randint(0, len(vcr_dataset) - 1)
+        return gr.Slider(value=index, interactive=True)
+    random_idx.click(fn=random_sample_data, outputs=index_slider)
 
 demo.launch()
