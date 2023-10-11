@@ -5,6 +5,7 @@ import random
 
 vcr_dataset = None
 image, question, answer_choices, answer_label, rationale_choices, rationale_label = [None] * 6
+button_state = [0 for _ in range(63)]
 
 with open('colors.json', 'r') as f:
     button_colors = json.load(f)
@@ -30,7 +31,8 @@ with gr.Blocks(css=css) as demo:
                 with gr.Row():
                     for i in range(8):
                         buttons[i+j*8] = gr.Button(f'object {i+j*8}' if i+j*8 != 0 else 'hidden_all', 
-                                                   size='sm', min_width=16, elem_id=f'button{i+j*8}')
+                                                   size='sm', min_width=16, elem_id=f'button{i+j*8}', 
+                                                   visible=True if i+j*8 == 0 else False)
         with gr.Column():
             question_text = gr.HighlightedText(label='question', 
                                           value=[('question', None)], 
@@ -61,5 +63,18 @@ with gr.Blocks(css=css) as demo:
         index = random.randint(0, len(vcr_dataset) - 1)
         return gr.Slider(value=index, interactive=True)
     random_idx.click(fn=random_sample_data, outputs=index_slider)
+
+    ## show data
+    def show_data(index):
+        pass
+
+    ## hidden all bbox or segm
+    def hidden_all():
+        pass
+
+    ## change bbox or segm
+    ### states = {0:none, 1:bbox, 2:segm, 3:both}
+    def add_mask():
+        pass
 
 demo.launch()
