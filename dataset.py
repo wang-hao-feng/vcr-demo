@@ -22,7 +22,7 @@ class VCRDataset(Dataset):
         
         def oidx2str(oidxs):
             output = [f'{objects[oidx]} {oidx}' for oidx in oidxs]
-            return '{} and {}'.format(' '.join(output[:-1]), output[-1])
+            return '{} and {}'.format(' '.join(output[:-1]), output[-1]) if len(output) > 1 else ' '.join(output)
         
         #test
         question = ' '.join([word if isinstance(word, str) else oidx2str(word) for word in data['question']])

@@ -8,7 +8,7 @@ dataset_path = None
 vcr_dataset = None
 image, objects, bboxes, segms = None, None, None, None
 mask_buttons, mask_button_state = [], dict([(i, 0) for i in range(63)])
-font = ImageFont.truetype('arial.ttf', 20)
+font = ImageFont.truetype('arial.ttf', 30)
 
 with open('colors.json', 'r') as f:
     button_colors = json.load(f)
@@ -41,10 +41,10 @@ with gr.Blocks(css=css) as demo:
                                           value=[('question', None)], 
                                           color_map={'False':'white'})
             answer_choices_text = gr.HighlightedText(label='answer choices', 
-                                               value=[('a\n', 'True'), ('b\n', None), ('c\n', None), ('d\n', None)], 
+                                               value=[('(a)\n', 'True'), ('(b)\n', None), ('(c)\n', None), ('(d)\n', None)], 
                                                color_map={'True':'green'})
             rationale_choices_text = gr.HighlightedText(label='rationale choices', 
-                                                   value=[('a\n', 'True'), ('b\n', None), ('c\n', None), ('d\n', None)], 
+                                                   value=[('(a)\n', 'True'), ('(b)\n', None), ('(c)\n', None), ('(d)\n', None)], 
                                                    color_map={'True':'green'})
 
     # functions
@@ -101,8 +101,6 @@ with gr.Blocks(css=css) as demo:
         rationale_choices_text_ = gr.HighlightedText([(f'({chr(a_ascii + idx)}) {choice}\n', 'True' if idx == rationale_label else None) 
                                                    for idx, choice in enumerate(rationale_choices)])
         
-        print([idx == answer_label for idx, _ in enumerate(answer_choices)])
-        
         # mask button
         object_num = len(objects)
         new_mask_button = [gr.Button(f'{objects[i]} {i}' if i < object_num else f'object {i}', 
@@ -141,7 +139,7 @@ with gr.Blocks(css=css) as demo:
             state = mask_button_state[idx+1]
             #draw bbox and text
             if state % 2 == 1:
-                draw.rectangle(bboxes[idx], outline=tuple(button_colors[str(idx+1)])+(200, ), width=3)
+                draw.rectangle(bboxes[idx], outline=tuple(button_colors[str(idx+1)])+(200, ), width=5)
                 text = f'{objects[idx]} {idx}'
                 w, h = bboxes[idx][:2]
                 text_bbox = draw.textbbox((w, h), text, font, align='center', spacing=2)
@@ -149,7 +147,7 @@ with gr.Blocks(css=css) as demo:
                 draw.text((w + 3, h), text, font=font, fill=(0, 0, 0), align='center', spacing=2)
             #draw segm
             if state > 1:
-                draw.polygon(segms[idx], outline=tuple(button_colors[str(idx+1)])+(200, ), width=3) if len(segms[idx]) > 0 else None
+                draw.polygon(segms[idx], outline=tuple(button_colors[str(idx+1)])+(200, ), width=5) if len(segms[idx]) > 0 else None
         return gr.Image(draw_image)
     for i in range(1, len(mask_buttons)):
         mask_buttons[i].click(fn=add_mask, inputs=mask_buttons[i], outputs=image_board)
