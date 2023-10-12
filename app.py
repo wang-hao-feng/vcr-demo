@@ -2,11 +2,13 @@ import gradio as gr
 import json
 from dataset import VCRDataset
 import random
+from PIL import ImageDraw, ImageFont
 
 dataset_path = None
 vcr_dataset = None
 image, objects, bboxes, segms = None, None, None, None
-mask_buttons, mask_button_state = [], dict([(f'object {i}', 0) for i in range(63)])
+mask_buttons, mask_button_state = [], dict([(i, 0) for i in range(63)])
+font = ImageFont.truetype('arial.ttf', 20)
 
 with open('colors.json', 'r') as f:
     button_colors = json.load(f)
@@ -105,7 +107,7 @@ with gr.Blocks(css=css) as demo:
         object_num = len(objects)
         new_mask_button = [gr.Button(f'{objects[i]} {i}' if i < object_num else f'object {i}', 
                                      visible=i < object_num) for i in range(63)]
-        mask_button_state = dict([(f'{objects[i]} {i}' if i < object_num else f'object {i}', 0) for i in range(63)])
+        mask_button_state = dict([(i, 0) for i in range(63)])
         
         return image_board_, question_text_, answer_choices_text_, rationale_choices_text_, *new_mask_button
     index_slider.change(fn=show_data, inputs=index_slider, 
@@ -113,11 +115,43 @@ with gr.Blocks(css=css) as demo:
 
     ## hidden all bbox or segm
     def hidden_all():
-        pass
+        global image
+        global mask_button_state
+        for key in mask_button_state:
+            mask_button_state[key] = 0
+        image_board_ = gr.Image(image)
+        return image_board_
+    mask_buttons[0].click(fn=hidden_all, outputs=image_board)
 
     ## change bbox or segm
     ### states = {0:none, 1:bbox, 2:segm, 3:both}
-    def add_mask():
-        pass
+    def add_mask(mask_button_value):
+        global image
+        global objects, bboxes, segms
+        global mask_button_state
+        global button_colors, font
+        # chage button state
+        state_key = int(mask_button_value.split(' ')[-1])
+        mask_button_state[state_key+1] += 1
+        mask_button_state[state_key+1] %= 4
+        #draw mask
+        draw_image = image.copy()
+        draw = ImageDraw.Draw(draw_image, 'RGBA')
+        for idx in range(len(objects)):
+            state = mask_button_state[idx+1]
+            #draw bbox and text
+            if state % 2 == 1:
+                draw.rectangle(bboxes[idx], outline=tuple(button_colors[str(idx+1)])+(200, ), width=3)
+                text = f'{objects[idx]} {idx}'
+                w, h = bboxes[idx][:2]
+                text_bbox = draw.textbbox((w, h), text, font, align='center', spacing=2)
+                draw.rectangle(text_bbox, fill=tuple(button_colors[str(idx+1)])+(200, ))
+                draw.text((w + 3, h), text, font=font, fill=(0, 0, 0), align='center', spacing=2)
+            #draw segm
+            if state > 1:
+                draw.polygon(segms[idx], outline=tuple(button_colors[str(idx+1)])+(200, ), width=3) if len(segms[idx]) > 0 else None
+        return gr.Image(draw_image)
+    for i in range(1, len(mask_buttons)):
+        mask_buttons[i].click(fn=add_mask, inputs=mask_buttons[i], outputs=image_board)
 
 demo.launch()

@@ -86,7 +86,6 @@ if __name__ == '__main__':
         text = f'{o} {idx}'
         w, h = bboxes[idx][:2]
         text_bbox = draw.textbbox((w, h), text, font, align='center', spacing=2)
-        text_w, text_h = text_bbox[2] - text_bbox[0], text_bbox[3] - text_bbox[1]
         draw.rectangle(text_bbox, fill=colors[idx]+(200, ))
         draw.text((w + 3, h), text, font=font, fill=(0, 0, 0), align='center', spacing=2)
     image.show()
