@@ -29,7 +29,7 @@ with gr.Blocks(css=css) as demo:
         with gr.Column():
             index_slider = gr.Slider(step=1, label='index', interactive=True)
             random_idx = gr.Button('Random')
-            image_board = gr.Image()
+            image_board = gr.Image(height=400)
             for j in range(8):
                 with gr.Row():
                     for i in range(8):
@@ -46,6 +46,13 @@ with gr.Blocks(css=css) as demo:
             rationale_choices_text = gr.HighlightedText(label='rationale choices', 
                                                    value=[('(a)\n', 'True'), ('(b)\n', None), ('(c)\n', None), ('(d)\n', None)], 
                                                    color_map={'True':'green'})
+            with gr.Row():
+                x_input = gr.Number(label='x')
+                y_input = gr.Number(label='y')
+                w_input = gr.Number(label='w')
+                h_input = gr.Number(label='h')
+                bbox_label = gr.Textbox(label='bbox label')
+            draw_bbox_button = gr.Button('Draw bbox')
 
     # functions
     ## input dataset path
@@ -151,5 +158,17 @@ with gr.Blocks(css=css) as demo:
         return gr.Image(draw_image)
     for i in range(1, len(mask_buttons)):
         mask_buttons[i].click(fn=add_mask, inputs=mask_buttons[i], outputs=image_board)
+
+    ## draw bbox
+    def draw_bbox(image, x, y, w, h, label):
+        draw = ImageDraw.Draw(image)
+        draw.rectangle([x, y, w, h], outline=(255, 255, 255)+(200, ), width=5)
+        label_bbox = draw.textbbox((w, h), label, font, align='center', spacing=2)
+        draw.rectangle(label_bbox, fill=(255, 255, 255)+(200, ))
+        draw.text((w + 3, h), label, font=font, fill=(0, 0, 0), align='center', spacing=2)
+        return gr.Image(image)
+    draw_bbox_button.click(fn=draw_bbox, 
+                           inputs=[image_board, x_input, y_input, w_input, h_input, bbox_label], 
+                           outputs=image_board)
 
 demo.launch()
