@@ -19,16 +19,17 @@ class VCRDataset(Dataset):
         objects = data['objects']
         image_path = os.path.join(self.image_root, data['img_fn'].replace('...', ''))
         metadata_path = os.path.join(self.image_root, data['metadata_fn'].replace('...', ''))
-        """ with open(metadata_path, 'r') as f:
-            metadata = json.load(f)
-        bboxes = [bbox[:-1] for bbox in metadata['boxes']]
-        segms = [[(x, y) for x, y in segm[0]] if len(segm) > 0 else [] for segm in metadata['segms']] """
+        
+        def oidx2str(oidxs):
+            output = [f'{objects[oidx]} {oidx}' for oidx in oidxs]
+            return '{} and {}'.format(' '.join(output[:-1]), output[-1])
         
         #test
-        question = data['question_orig']
-        answer_choices = [' '.join([word if isinstance(word, str) else str(word)[1:-1] for word in choice]) for choice in data['answer_choices']]
+        question = ' '.join([word if isinstance(word, str) else oidx2str(word) for word in data['question']])
+        answer_choices = [' '.join([word if isinstance(word, str) else oidx2str(word) for word in choice]) 
+                          for choice in data['answer_choices']]
         answer_label = data['answer_label']
-        rationale_choices = [' '.join([word if isinstance(word, str) else str(word)[1:-1] for word in choice]) for choice in data['rationale_choices']]
+        rationale_choices = [' '.join([word if isinstance(word, str) else oidx2str(word) for word in choice]) for choice in data['rationale_choices']]
         rationale_label = data['rationale_label']
         
         return {'objects': objects, 
